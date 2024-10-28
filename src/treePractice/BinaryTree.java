@@ -181,6 +181,7 @@ public class BinaryTree<E> implements Serializable {
             sb.append("null\n");
         } else {
             sb.append(node.toString());
+            System.err.println(node.toString());
             sb.append("\n");
             preOrderTraverse(node.left, depth + 1, sb);
             preOrderTraverse(node.right, depth + 1, sb);

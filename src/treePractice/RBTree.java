@@ -30,14 +30,9 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
     }
 
     /**
-     * Left rotation of x around the pivot node
-     *    pivot                      x
-     *    /  \                     /  \
-     *   T1   x        ----->  pivot  T3
-     *       / \                /  \
-     *     T2  T3              T1  T2
+     * Left rotation of around the pivot node
      * @param pivot
-     * @return
+     * @return  the new root of the subtree 
      */
     private RBNode<E> rotateLeft(RBNode<E> pivot) {
         RBNode<E> x = (RBNode<E>) pivot.right; 
@@ -45,22 +40,15 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
         if (pivot.right != null) pivot.right.parent = pivot;
 
         x.left = pivot;
-
         x.parent = pivot.parent;
         x.left.parent = x;
-
         return x; // new root
     }
 
     /**
-     * Right rotation of x around the pivot node
-     *         pivot                 x
-     *         /  \                /  \
-     *        x   T3    ----->   T1   pivot
-     *       / \                      /  \
-     *     T1  T2                    T2  T3
+     * Right rotation around the pivot node
      * @param pivot
-     * @return
+     * @return the new root of the subtree
      */
     private RBNode<E> rotateRight(RBNode<E> pivot) {
         RBNode<E> x = (RBNode<E>) pivot.left; 
@@ -68,7 +56,6 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
         if (pivot.left != null) pivot.left.parent = pivot;
 
         x.right = pivot;
-
         x.parent = pivot.parent;
         x.right.parent = x;
         return x; // new root
@@ -125,6 +112,8 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
 
     /**
      * Returns a node's sibling if it exists, null otherwise.
+     * @param node  the node who's sibling we want
+     * @return the sibling
      */
     private RBNode<E> getSibling(RBNode<E> node) {
         if (node.parent == null) return null;
@@ -139,37 +128,39 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
      * @param parent    the parent of node
      */
     private void addRebalance(RBNode<E> node, RBNode<E> parent) {
+        // Case 1: Parent is black or null (i.e., root)
         if ((parent == null) || parent.black) {
-            // Case 1: Parent is black or null (i.e., root)
             // We don't have to do anything
             // Since the parent is black, the red property isn't violated by insertion.
             // Since new nodes are red, we can't cause a violation of the black property with insertion.
             return;
         }
 
+
+        // Case 2: the Parent is red and the root
         RBNode<E> grandparent = (RBNode<E>) parent.parent;
         if (grandparent == null) {
-            // Case 2: the Parent is red and the root
             // Solution: Make the root black
             parent.black = true;
             return;
         }
 
-        RBNode<E> uncle = getSibling(parent);
-        if ((uncle != null) & !uncle.black) {
-            // Case 3: parent and uncle are red, grandparent exists
-            // Solution: Recolor
-            // TODO: Complete this case when instructed
-        }
 
+        // Case 3: parent and uncle are red, grandparent exists (and must be black!)
+        // TODO: Complete this case when instructed
+        RBNode<E> uncle = getSibling(parent);
+        if ((uncle != null) && !uncle.black) {
+
+            return;
+        }
         // Case 4: Parent is red, Uncle is black or null, grandparent exists (and must be black). 
         // Solution: Rotate and Recolor!
-        // Rotate so the parent becomes the grandparent and color the former-parent black and 
-        // the former-grandparent red.
+        // Make the parent the grandparent and color the former-parent black and the former-grandparent 
+        // red.
 
         // Case 4a: If we're an inner grandchild, this won't work, so we can rotate to make sure we're an
         // outer grandchild by rotating outward around the parent and swapping out labels for parent and child
-        if (grandparent.left.right == node) {
+        if ((grandparent.left != null) && (grandparent.left.right == node)) {
             // Do a leftward rotation if we're a left inner grandchild
             grandparent.left = rotateLeft(parent);
 
@@ -177,7 +168,8 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
             RBNode<E> temp = parent;
             parent = node;
             node = temp;
-        } else if (grandparent.right.left == node) {
+        }
+        else if ((grandparent.right != null) && (grandparent.right.left == node)) {
             // Do a rightward rotation if we're a right inner grandchild
             grandparent.right = rotateRight(parent);
 
@@ -186,20 +178,34 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
             parent = node;
             node = temp;
         }
-
-        // 4b. Now we're guaranteed to be an outer grandchild, so we can rotate & recolor
-        RBNode<E> greatgrandparent = (RBNode<E>) grandparent.parent;
-
-        // Rotate 
-
+        // 4b. Now we're guaranteed to be an outer grandchild, so we can rotate!
+        
         // TODO: Complete when instructed
-        // HINT: Make sure to handle what happens when the grandparent is the root, 
-        // a left child or a right child and whether the node is a left outer grandchild
-        // or right outer grandchild
+    }
 
-        // And recolor
-        grandparent.black = false;
-        parent.black = true;
+    /**
+     * Rotate around pivot toward the node toward.
+     * @param pivot     the node to rotate around.
+     * @param toward    child of pivot to rotate toward.
+     */
+    private void rotateToward(RBNode<E> pivot, RBNode<E> toward) {
+        if (pivot.left == toward) {
+            if (pivot.parent == null) {
+                root = rotateLeft(pivot);
+            } else if (pivot.parent.left == pivot) {
+                pivot.parent.left = rotateLeft(pivot);
+            } else {
+                pivot.parent.right = rotateLeft(pivot);
+            }
+        } else if (pivot.right == toward) {
+            if (pivot.parent == null) {
+                root = rotateRight(pivot);
+            } else if (pivot.parent.left == pivot) {
+                pivot.parent.left = rotateRight(pivot);
+            } else {
+                pivot.parent.right = rotateRight(pivot);
+            }
+        }
     }
 
     /**
@@ -239,18 +245,9 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
      */
     private void delete(RBNode<E> node) {
         // Check for easy cases first
-        // If we have two children, we can do a normal BST delete
+        // If we have two children, replace with in-order successor and delete
         if ((node.left != null) && (node.right != null)) {
-            if (node.right.left == null) {
-                node.data = node.right.data;
-                node.right = node.right.right;
-                if (node.right != null) {
-                    node.right.parent = node;
-                    ((RBNode<E>) node.right).black = true;
-                }
-            } else {    
-                node.data = findSmallestChild(node.right);
-            }
+            node.data = replaceWithSuccessor((RBNode<E>) node.right);
             return;
         } 
         // If there's one child, replace the node with it's child
@@ -289,8 +286,8 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
             root = null;
             return;
         }
-
-        // delete the leaf
+        
+        // If the leaf is red, we can just delete it
         if (!node.black) {
             if (node.parent.left == node) {
                 node.parent.left = null;
@@ -299,7 +296,6 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
             }
         }  
         
-        // If the leaf is red, we can just delete it
         // If we have a black leaf, we're at one of the hard cases 
         // and have to rebalance
         if (node.black) {
@@ -316,57 +312,52 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
         // Case 1: If we're at the root, we're rebalanced
         if (parent == null) return;
 
-        RBNode<E> sibling = getSibling(node);
 
-        // Case 2: parent and sibling are black
+        // Get the sibling and it's children (i.e., nephews)
+        RBNode<E> sibling = getSibling(node);
+        RBNode<E> closeChild = null;
+        RBNode<E> distantChild = null;
+        if (sibling != null) {
+            if (parent.left == node) {
+                closeChild = (RBNode<E>) sibling.left;
+                distantChild = (RBNode<E>) sibling.right;
+            } else {
+                closeChild = (RBNode<E>) sibling.right;
+                distantChild = (RBNode<E>) sibling.left;
+            }
+        }
+
+        // Case 2: parent and sibling and sibling's children are black/null
         // recolor sibling so the # of black nodes on any path
         // through P are even (reduced by 1). Recurse on parent
-        // to ensure this is true for paths not along P
-        if (parent.black && sibling.black) {
+        // to ensure this is true for paths not through P
+        if (parent.black && sibling.black &&
+            ((closeChild == null) || closeChild.black) &&
+            ((distantChild == null || distantChild.black))) {
+
             sibling.black = false;
             deleteRebalance(parent, (RBNode<E>) parent.parent);
+            return;
         }
         // Case 3: Sibling red, so parent and sibling's children
         // are black/null
         if ((sibling != null) && !sibling.black) {
             // rotate toward node
-            if (parent.left == node) {
-                if (parent.parent == null) {
-                    root = rotateLeft(parent);
-                } else if (parent.parent.left == parent) {
-                    parent.parent.left = rotateLeft(parent);
-                } else {
-                    parent.parent.right = rotateLeft(parent);
-                }
-                
-            } else if (parent.right == node) {
-                if (parent.parent == null) {
-                    root = rotateRight(parent);
-                } else if (parent.parent.left == parent) {
-                    parent.parent.left = rotateRight(parent);
-                } else {
-                    parent.parent.right = rotateRight(parent);
-                }
-                
-            }
+            rotateToward(parent, node);
             // recolor
             parent.black = false;
             sibling.black = true;
 
             // reassign
-            sibling = getSibling(node);
-            // pass through to future cases 
-        }
-
-        // Get the close and far child of the sibling (i.e., cousins)
-
-        RBNode<E> closeChild, distantChild;
-        if (parent.left == node) {
-            closeChild = (RBNode<E>) sibling.left;
-            distantChild = (RBNode<E>) sibling.right;
-        } else {
-            closeChild = (RBNode<E>) sibling.right;
-            distantChild = (RBNode<E>) sibling.left;
+            sibling = closeChild;
+            if (parent.left == node) {
+                closeChild = (RBNode<E>) sibling.left;
+                distantChild = (RBNode<E>) sibling.right;
+            } else {
+                closeChild = (RBNode<E>) sibling.right;
+                distantChild = (RBNode<E>) sibling.left;
+            }
+            // pass through
         }
 
         // Case 4: If sibling is black and only closeChild is red
@@ -374,6 +365,7 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
             ((closeChild != null) && !closeChild.black) &&
             ((distantChild == null) || distantChild.black)) {
 
+            // Rotate sibling away from root
             if (parent.left == sibling) {
                 parent.left = rotateLeft(sibling);
             } else {
@@ -394,26 +386,8 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
         if ((sibling != null) && sibling.black && 
             ((distantChild != null) && !distantChild.black)) {
 
-            // Rotate around parent toward root
-            if (parent.parent == null) {
-                if (parent.left == node) {
-                    root = rotateLeft(parent);
-                } else {
-                    root = rotateRight(parent);
-                }
-                root.parent = null;
-            } else {
-                RBNode<E> grandparent = (RBNode<E>) parent.parent;
-                if ((parent.left == node) && grandparent.left == parent) {
-                    grandparent.left = rotateLeft(parent);
-                } else if ((parent.right == node) && grandparent.left == parent) {
-                    grandparent.left = rotateRight(parent);
-                } else if ((parent.left == node) && grandparent.right == parent) {
-                    grandparent.right = rotateLeft(parent);
-                } else if ((parent.right == node) && grandparent.right == parent) {
-                    grandparent.right = rotateRight(parent);
-                }
-            }
+            // Rotate around parent toward node
+            rotateToward(parent, node);
 
             // recolor 
             sibling.black = parent.black;
@@ -432,28 +406,20 @@ public class RBTree<E extends Comparable<E>> extends BinarySearchTree<E> {
 
     /**
      * Find the node that is the
-     * inorder successor and replace it
-     * with its left child (if any) and recolor.
+     * inorder successor, delete it, and return it's
+     * value
      *
-     * @param parent The parent of possible inorder
-     *               successor (ip)
-     * @return The data in the ip
+     * @param node a left descendent of the right subtree of to-be-deleted node
+     * @return The data in the inorder successor
      * @post The inorder successor is removed from the tree.
      */
-    private E findSmallestChild(Node<E> parent) {
-        // If the left child has no left child, it is
-        // the inorder predecessor.
-        if (parent.left.left == null) {
-            E returnValue = parent.left.data;
-            parent.left = parent.left.right;
-            if (parent.left != null) {
-                parent.left.parent = parent;
-                ((RBNode<E>)parent.left).black = true;
-            }
+    private E replaceWithSuccessor(RBNode<E> node) {
+        if (node.left == null) {
+            E returnValue = node.data;
+            delete(node);
             return returnValue;
         } else {
-            return findSmallestChild(parent.left);
+            return replaceWithSuccessor((RBNode<E>) node.left);
         }
     }
-
 }
